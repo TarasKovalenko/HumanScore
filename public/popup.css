@@ -1,0 +1,160 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  width: 360px;
+  background:
+    radial-gradient(circle at top right, rgba(250, 223, 132, 0.42), transparent 34%),
+    linear-gradient(180deg, #f8f4e7 0%, #ffffff 46%);
+  color: #132238;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.popup-app {
+  padding: 16px;
+}
+
+.popup-eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b6c00;
+}
+
+.popup-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.popup-subtitle,
+.popup-footnote,
+.popup-summary {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #536274;
+}
+
+.popup-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.popup-card {
+  border: 1px solid rgba(19, 34, 56, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.popup-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.popup-button {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #ffffff;
+  background: #1d4ed8;
+}
+
+.popup-button.secondary {
+  background: #0f766e;
+}
+
+.popup-button.ghost {
+  grid-column: 1 / -1;
+  color: #334155;
+  background: #e8edf3;
+}
+
+.popup-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.popup-label,
+.popup-status,
+.popup-section-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.popup-score-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.popup-score {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.popup-range {
+  width: 100%;
+  margin: 8px 0 14px;
+}
+
+.popup-reasons {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #334155;
+}
+
+.popup-reasons li {
+  margin-bottom: 5px;
+}
+
+.popup-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.popup-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.popup-textarea {
+  width: 100%;
+  min-height: 108px;
+  resize: vertical;
+  border: 1px solid rgba(19, 34, 56, 0.14);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 12px;
+  color: #132238;
+  background: #fcfcfb;
+}

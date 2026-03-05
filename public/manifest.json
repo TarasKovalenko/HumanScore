@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Local Text Lens",
+  "version": "2.0.0",
+  "description": "Locally estimates AI-likely writing on LinkedIn and shows transparent score badges.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://www.linkedin.com/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Local Text Lens",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
