@@ -1,6 +1,20 @@
 # HumanScore
 
+[![Made in Ukraine](https://img.shields.io/badge/made_in-ukraine-ffd700.svg?labelColor=0057b7)](https://taraskovalenko.github.io/)
+
 Chrome extension that estimates how likely LinkedIn posts are to be AI-generated. It runs entirely in the browser using statistical heuristics - no network calls, no remote models, no data leaves your machine.
+
+## Terms of use
+
+By using this project or its source code, for any purpose and in any shape or form, you grant your **implicit agreement** to all of the following statements:
+
+- You unequivocally condemn Russia and its military aggression against Ukraine
+- You recognize that Russia is an occupant that unlawfully invaded a sovereign state
+- You agree that [Russia is a terrorist state](https://www.europarl.europa.eu/doceo/document/RC-9-2022-0482_EN.html)
+- You fully support Ukraine's territorial integrity, including its claims over [temporarily occupied territories](https://en.wikipedia.org/wiki/Russian-occupied_territories_of_Ukraine)
+- You reject false narratives perpetuated by Russian state propaganda
+
+To learn more about the war and how you can help, [click here](https://war.ukraine.ua/). Glory to Ukraine! 🇺🇦
 
 ## How It Works
 
@@ -320,3 +334,7 @@ The default threshold (65) is defined in `src/shared/defaults.ts`. Users can adj
 - [StyloAI](https://arxiv.org/abs/2405.10129) - 31 stylometric features for AI detection.
 - [ZipPy / thinkst](https://github.com/thinkst/zippy) - Compression-based detection approach.
 - [GLTR](https://gltr.io/) - Giant Language Model Test Room, token-rank visualization.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
