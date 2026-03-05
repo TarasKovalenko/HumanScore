@@ -290,7 +290,7 @@ The default threshold (65) is defined in `src/shared/defaults.ts`. Users can adj
 - **Manual mode** ("Only scan when clicked"): Disables automatic feed scanning. Use the popup's "Scan Nearest Post" or "Scan Selected Text" buttons.
 - Clicking a badge toggles an explanation panel showing score, confidence, top reasons, and warnings.
 - Highlights mark individual sentences that score above the threshold based on per-sentence analysis.
-- Profile and notifications pages are excluded from automatic badge rendering.
+- Notifications pages are excluded from automatic badge rendering.
 
 ## Limitations
 

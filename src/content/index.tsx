@@ -23,6 +23,7 @@ let mutationTimer = 0;
 let scrollTimer = 0;
 let routeScanToken = 0;
 let openBadgePanel: HTMLElement | null = null;
+let openBadgeHost: HTMLElement | null = null;
 let panelDismissReady = false;
 let observer: MutationObserver | null = null;
 let intersectionObserver: IntersectionObserver | null = null;
@@ -32,11 +33,7 @@ void initialize();
 
 function isExcludedPage(pathname = window.location.pathname): boolean {
   const lowerPath = pathname.toLowerCase();
-  if (/\/notifications\b/.test(lowerPath)) {
-    return true;
-  }
-
-  return /^\/in\/[^/?#]+(?:\/.*)?$/.test(lowerPath);
+  return /\/notifications\b/.test(lowerPath);
 }
 
 async function initialize(): Promise<void> {
@@ -273,9 +270,17 @@ function mountBadge(
 ): void {
   let state = postState.get(container);
   const anchor = findBadgeAnchor(container);
+  const mountInsideControlMenu = anchor.matches(
+    ".feed-shared-control-menu.feed-shared-update-v2__control-menu"
+  );
+  const useStackedControlMenuBadge =
+    mountInsideControlMenu && shouldStackControlMenuBadge(container, anchor);
   const anchorParent = anchor.parentElement;
-  const insertionParent =
-    anchor !== container && anchorParent instanceof HTMLElement ? anchorParent : container;
+  const insertionParent = mountInsideControlMenu
+    ? anchor
+    : anchor !== container && anchorParent instanceof HTMLElement
+      ? anchorParent
+      : container;
 
   if (!state || !state.host.isConnected) {
     const host = findReusableHost(container, anchor) ?? document.createElement("span");
@@ -293,8 +298,13 @@ function mountBadge(
   }
 
   const host = state.host;
+  host.dataset.ltlBadgePlacement = useStackedControlMenuBadge
+    ? "control-menu-stacked"
+    : mountInsideControlMenu
+      ? "control-menu"
+      : "default";
   removeStaleHosts(container, host);
-  const shouldSitBeforeAnchor = anchor !== container;
+  const shouldSitBeforeAnchor = !mountInsideControlMenu && anchor !== container;
   const isInCorrectSpot =
     host.parentElement === insertionParent &&
     (shouldSitBeforeAnchor
@@ -316,6 +326,32 @@ function mountBadge(
   }
 
   renderBadge(state.host, result, settings.threshold);
+}
+
+function shouldStackControlMenuBadge(container: HTMLElement, anchor: HTMLElement): boolean {
+  const scope =
+    anchor.closest<HTMLElement>(".feed-shared-update-v2__control-menu-container") ?? container;
+
+  for (const candidate of scope.querySelectorAll<HTMLElement>("button, a")) {
+    if (!candidate.isConnected || candidate.closest(".ltl-badge-host")) {
+      continue;
+    }
+    if (anchor.contains(candidate)) {
+      continue;
+    }
+
+    const aria = (candidate.getAttribute("aria-label") ?? "").toLowerCase();
+    const text = (candidate.textContent ?? "").toLowerCase();
+
+    if (aria.includes("follow") || aria.includes("connect")) {
+      return true;
+    }
+    if (text.includes("follow") || text.includes("connect")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function renderBadge(host: HTMLElement, result: AnalysisResult, threshold: number): void {
@@ -420,12 +456,18 @@ function renderBadge(host: HTMLElement, result: AnalysisResult, threshold: numbe
       closeOpenBadgePanel();
       panel.hidden = false;
       openBadgePanel = panel;
+      openBadgeHost = host;
+      host.classList.add("ltl-badge-host--open");
       return;
     }
 
     panel.hidden = true;
     if (openBadgePanel === panel) {
       openBadgePanel = null;
+    }
+    if (openBadgeHost === host) {
+      openBadgeHost = null;
+      host.classList.remove("ltl-badge-host--open");
     }
   });
 
@@ -462,6 +504,15 @@ function purgeDetachedPosts(): void {
 }
 
 function findReusableHost(_container: HTMLElement, anchor: HTMLElement): HTMLSpanElement | null {
+  if (anchor.matches(".feed-shared-control-menu.feed-shared-update-v2__control-menu")) {
+    for (const child of anchor.children) {
+      if (child instanceof HTMLSpanElement && child.classList.contains("ltl-badge-host")) {
+        return child;
+      }
+    }
+    return null;
+  }
+
   const immediatePrevious = anchor.previousElementSibling;
   if (
     immediatePrevious instanceof HTMLSpanElement &&
@@ -513,7 +564,7 @@ function scanCurrentPost(): AnalysisResult {
       summary: "Automatic post badges are disabled on this LinkedIn page.",
       reasons: [],
       suspiciousSentences: [],
-      warning: "Profile and notifications pages are intentionally excluded.",
+      warning: "Notifications pages are intentionally excluded.",
       wordCount: 0,
     };
     lastResult = result;
@@ -595,6 +646,10 @@ function closeOpenBadgePanel(): void {
 
   openBadgePanel.hidden = true;
   openBadgePanel = null;
+  if (openBadgeHost) {
+    openBadgeHost.classList.remove("ltl-badge-host--open");
+    openBadgeHost = null;
+  }
 }
 
 function handleRouteChange(): void {

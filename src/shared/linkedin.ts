@@ -31,6 +31,7 @@ const TEXT_ROOT_SELECTORS = [
 ];
 
 const HEADER_SELECTORS = [
+  ".feed-shared-control-menu.feed-shared-update-v2__control-menu",
   ".feed-shared-update-v2__control-menu-container",
   ".update-components-actor--with-control-menu",
   ".update-components-actor__container",

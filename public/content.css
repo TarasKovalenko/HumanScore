@@ -16,6 +16,42 @@
   z-index: 10;
 }
 
+.ltl-badge-host--open {
+  z-index: 2147483647;
+}
+
+[data-ltl-badge-placement="control-menu"] {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 10px 0 0;
+  flex-shrink: 0;
+  position: relative;
+  padding-right: 10px;
+}
+
+[data-ltl-badge-placement="control-menu"]::after {
+  content: "";
+  width: 1px;
+  height: 18px;
+  background: #d1d5db;
+  display: inline-block;
+  margin-left: 10px;
+}
+
+[data-ltl-badge-placement="control-menu-stacked"] {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 0;
+  display: block;
+  z-index: 20;
+}
+
+[data-ltl-badge-placement="control-menu-stacked"]::after {
+  content: none;
+}
+
 .ltl-badge {
   position: relative;
   display: inline-flex;
@@ -36,23 +72,38 @@
   cursor: pointer;
   background: rgba(255, 255, 255, 0.96);
   color: #1f2937;
-  box-shadow:
-    0 8px 20px rgba(15, 23, 42, 0.12),
-    0 1px 3px rgba(15, 23, 42, 0.08);
   transition:
     transform 0.16s ease,
-    box-shadow 0.16s ease,
     background 0.16s ease;
   user-select: none;
-  backdrop-filter: blur(8px);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .ltl-badge__button:hover {
   transform: translateY(-1px);
   background: #fff;
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.14),
-    0 2px 5px rgba(15, 23, 42, 0.1);
+}
+
+[data-ltl-badge-placement="control-menu"] .ltl-badge__button {
+  background: transparent;
+  padding: 4px 8px 4px 4px;
+}
+
+[data-ltl-badge-placement="control-menu"] .ltl-badge__button:hover {
+  transform: none;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+[data-ltl-badge-placement="control-menu-stacked"] .ltl-badge__button {
+  transform: none;
+  background: #fff;
+  padding: 4px 8px 4px 4px;
+}
+
+[data-ltl-badge-placement="control-menu-stacked"] .ltl-badge__button:hover {
+  transform: none;
+  background: #f8fafc;
 }
 
 .ltl-badge__button[data-variant="high"] {
@@ -114,6 +165,7 @@
 .ltl-badge__panel {
   position: absolute;
   top: calc(100% + 8px);
+  bottom: auto;
   left: 0;
   z-index: 2147483647;
   width: 300px;
@@ -127,6 +179,12 @@
     0 8px 16px rgba(15, 23, 42, 0.12);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
+}
+
+[data-ltl-badge-placement="control-menu"] .ltl-badge__panel,
+[data-ltl-badge-placement="control-menu-stacked"] .ltl-badge__panel {
+  left: auto;
+  right: 0;
 }
 
 .ltl-badge__header {
@@ -221,6 +279,7 @@
 
 .ltl-badge__body {
   padding: 0 14px 12px;
+  text-align: left;
 }
 
 .ltl-badge__section-label {
@@ -262,4 +321,5 @@
   font-size: 11px;
   line-height: 1.5;
   color: #64748b;
+  text-align: left;
 }
