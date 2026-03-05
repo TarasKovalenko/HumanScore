@@ -31,8 +31,8 @@ const TEXT_ROOT_SELECTORS = [
 ];
 
 const HEADER_SELECTORS = [
-  ".update-components-actor--with-control-menu",
   ".feed-shared-update-v2__control-menu-container",
+  ".update-components-actor--with-control-menu",
   ".update-components-actor__container",
 ];
 
@@ -147,16 +147,33 @@ export function findPrimaryTextRoot(container: HTMLElement): HTMLElement | null 
 }
 
 export function findBadgeAnchor(container: HTMLElement): HTMLElement {
+  const badgeRoot = getBadgeRoot(container);
+
   for (const selector of HEADER_SELECTORS) {
-    const found = container.querySelector<HTMLElement>(selector);
+    const found = badgeRoot.querySelector<HTMLElement>(selector);
     if (found && isElementVisible(found)) {
       return found;
     }
   }
 
-  return container.firstElementChild instanceof HTMLElement
-    ? container.firstElementChild
-    : container;
+  return badgeRoot.firstElementChild instanceof HTMLElement
+    ? badgeRoot.firstElementChild
+    : badgeRoot;
+}
+
+function getBadgeRoot(container: HTMLElement): HTMLElement {
+  if (container.matches("div.feed-shared-update-v2") && isElementVisible(container)) {
+    return container;
+  }
+
+  const feedCard = container.querySelector<HTMLElement>(
+    "div.feed-shared-update-v2[role='article'], div.feed-shared-update-v2"
+  );
+  if (feedCard && isElementVisible(feedCard)) {
+    return feedCard;
+  }
+
+  return container;
 }
 
 export function isElementVisible(element: Element | null): element is HTMLElement {

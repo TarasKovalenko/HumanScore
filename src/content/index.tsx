@@ -7,6 +7,7 @@ import {
   getCandidatePostContainers,
   resolvePostRoot,
 } from "../shared/linkedin";
+import { isPopupToContentMessage } from "../shared/messages";
 
 type PostState = {
   host: HTMLSpanElement;
@@ -20,70 +21,88 @@ let settings: Settings = { ...DEFAULT_SETTINGS };
 let lastResult: AnalysisResult | null = null;
 let mutationTimer = 0;
 let scrollTimer = 0;
+let routeScanToken = 0;
+let openBadgePanel: HTMLElement | null = null;
+let panelDismissReady = false;
 let observer: MutationObserver | null = null;
 let intersectionObserver: IntersectionObserver | null = null;
+const bootstrapScanDelays = [0, 450, 1200, 2400];
 
 void initialize();
 
-function isExcludedPage(): boolean {
-  return /\/(notifications)\b/.test(window.location.pathname);
+function isExcludedPage(pathname = window.location.pathname): boolean {
+  const lowerPath = pathname.toLowerCase();
+  if (/\/notifications\b/.test(lowerPath)) {
+    return true;
+  }
+
+  return /^\/in\/[^/?#]+(?:\/.*)?$/.test(lowerPath);
 }
 
 async function initialize(): Promise<void> {
   settings = await loadSettingsWithMigration();
   setupMessageBridge();
   setupStorageSync();
-
-  if (isExcludedPage()) return;
-
   setupRealtimeObservers();
+  setupRouteWatcher();
+  setupPanelDismissListener();
 
   if (settings.scanMode === "auto") {
-    scheduleVisiblePostScan();
+    scheduleBootstrapScans();
   }
 }
 
 function setupMessageBridge(): void {
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    switch (message?.type) {
-      case "SCAN_POST":
-        sendResponse({ result: scanCurrentPost() });
-        return true;
-      case "SCAN_SELECTION":
-        sendResponse({ result: scanSelection() });
-        return true;
-      case "CLEAR_HIGHLIGHTS":
-        clearAllHighlights();
-        sendResponse({
-          result: {
-            score: "--",
-            confidence: "--",
-            status: "Cleared",
-            summary: "Highlights removed from this page.",
-            reasons: [],
-            suspiciousSentences: [],
-            warning: "Only local text highlights were removed.",
-            wordCount: 0,
-          } satisfies AnalysisResult,
-        });
-        return true;
-      case "GET_LAST_RESULT":
-        sendResponse({ result: lastResult });
-        return true;
-      case "SETTINGS_UPDATED":
-        settings = normalizeSettings(message.settings);
-        if (settings.scanMode === "auto") {
-          scheduleVisiblePostScan(true);
-        } else {
-          clearAllHighlights();
-          clearAllBadges();
-        }
-        sendResponse({ ok: true });
-        return true;
-      default:
+  chrome.runtime.onMessage.addListener(
+    (
+      message: unknown,
+      _sender: chrome.runtime.MessageSender,
+      sendResponse: (response?: unknown) => void
+    ) => {
+      if (!isPopupToContentMessage(message)) {
         return false;
+      }
+
+      switch (message.type) {
+        case "SCAN_POST":
+          sendResponse({ result: scanCurrentPost() });
+          return true;
+        case "SCAN_SELECTION":
+          sendResponse({ result: scanSelection() });
+          return true;
+        case "CLEAR_HIGHLIGHTS":
+          clearAllHighlights();
+          sendResponse({
+            result: {
+              score: "--",
+              confidence: "--",
+              status: "Cleared",
+              summary: "Highlights removed from this page.",
+              reasons: [],
+              suspiciousSentences: [],
+              warning: "Only local text highlights were removed.",
+              wordCount: 0,
+            } satisfies AnalysisResult,
+          });
+          return true;
+        case "GET_LAST_RESULT":
+          sendResponse({ result: lastResult });
+          return true;
+        case "SETTINGS_UPDATED":
+          settings = normalizeSettings(message.settings);
+          if (settings.scanMode === "auto") {
+            scheduleVisiblePostScan(true);
+          } else {
+            clearAllHighlights();
+            clearAllBadges();
+          }
+          sendResponse({ ok: true });
+          return true;
+        default:
+          return false;
+      }
     }
-  });
+  );
 }
 
 function setupStorageSync(): void {
@@ -173,7 +192,11 @@ function setupRealtimeObservers(): void {
 }
 
 function scheduleVisiblePostScan(force = false): void {
-  if (isExcludedPage()) return;
+  if (isExcludedPage()) {
+    clearAllHighlights();
+    clearAllBadges();
+    return;
+  }
   purgeDetachedPosts();
 
   const posts = getCandidatePostContainers();
@@ -185,7 +208,11 @@ function scheduleVisiblePostScan(force = false): void {
 }
 
 function scanVisiblePosts(force = false): void {
-  if (isExcludedPage()) return;
+  if (isExcludedPage()) {
+    clearAllHighlights();
+    clearAllBadges();
+    return;
+  }
   purgeDetachedPosts();
 
   const posts = getCandidatePostContainers().filter(isNearViewport).slice(0, 8);
@@ -195,6 +222,10 @@ function scanVisiblePosts(force = false): void {
 }
 
 function scanAndRenderPost(container: HTMLElement, force = false): AnalysisResult | null {
+  if (isExcludedPage()) {
+    return null;
+  }
+
   const extracted = extractPostText(container);
   if (!extracted.text) {
     return null;
@@ -242,6 +273,9 @@ function mountBadge(
 ): void {
   let state = postState.get(container);
   const anchor = findBadgeAnchor(container);
+  const anchorParent = anchor.parentElement;
+  const insertionParent =
+    anchor !== container && anchorParent instanceof HTMLElement ? anchorParent : container;
 
   if (!state || !state.host.isConnected) {
     const host = findReusableHost(container, anchor) ?? document.createElement("span");
@@ -250,23 +284,35 @@ function mountBadge(
 
     removeStaleHosts(container, host);
 
-    if (host.isConnected) {
-      host.remove();
-    }
-    if (anchor !== container && anchor.parentElement === container) {
-      container.insertBefore(host, anchor);
-    } else if (container.firstElementChild) {
-      container.insertBefore(host, container.firstElementChild);
-    } else {
-      container.prepend(host);
-    }
-
     state = { host, result, settingsKey, signature };
     postState.set(container, state);
   } else {
     state.result = result;
     state.settingsKey = settingsKey;
     state.signature = signature;
+  }
+
+  const host = state.host;
+  removeStaleHosts(container, host);
+  const shouldSitBeforeAnchor = anchor !== container;
+  const isInCorrectSpot =
+    host.parentElement === insertionParent &&
+    (shouldSitBeforeAnchor
+      ? host.nextElementSibling === anchor
+      : insertionParent.firstElementChild === host);
+
+  if (!isInCorrectSpot) {
+    if (host.isConnected) {
+      host.remove();
+    }
+
+    if (shouldSitBeforeAnchor && anchor.parentElement === insertionParent) {
+      insertionParent.insertBefore(host, anchor);
+    } else if (insertionParent.firstElementChild) {
+      insertionParent.insertBefore(host, insertionParent.firstElementChild);
+    } else {
+      insertionParent.prepend(host);
+    }
   }
 
   renderBadge(state.host, result, settings.threshold);
@@ -370,7 +416,17 @@ function renderBadge(host: HTMLElement, result: AnalysisResult, threshold: numbe
   button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    panel.hidden = !panel.hidden;
+    if (panel.hidden) {
+      closeOpenBadgePanel();
+      panel.hidden = false;
+      openBadgePanel = panel;
+      return;
+    }
+
+    panel.hidden = true;
+    if (openBadgePanel === panel) {
+      openBadgePanel = null;
+    }
   });
 
   wrapper.addEventListener("click", (event) => {
@@ -382,12 +438,13 @@ function renderBadge(host: HTMLElement, result: AnalysisResult, threshold: numbe
 }
 
 function removeStaleHosts(container: HTMLElement, keep: HTMLElement): void {
-  for (const el of container.querySelectorAll<HTMLElement>(":scope > .ltl-badge-host")) {
+  for (const el of container.querySelectorAll<HTMLElement>(".ltl-badge-host")) {
     if (el !== keep) el.remove();
   }
 }
 
 function clearAllBadges(): void {
+  closeOpenBadgePanel();
   for (const [container, state] of postState.entries()) {
     if (state.host.isConnected) {
       state.host.remove();
@@ -404,7 +461,7 @@ function purgeDetachedPosts(): void {
   }
 }
 
-function findReusableHost(container: HTMLElement, anchor: HTMLElement): HTMLSpanElement | null {
+function findReusableHost(_container: HTMLElement, anchor: HTMLElement): HTMLSpanElement | null {
   const immediatePrevious = anchor.previousElementSibling;
   if (
     immediatePrevious instanceof HTMLSpanElement &&
@@ -413,7 +470,7 @@ function findReusableHost(container: HTMLElement, anchor: HTMLElement): HTMLSpan
     return immediatePrevious;
   }
 
-  for (const child of container.children) {
+  for (const child of anchor.parentElement?.children ?? []) {
     if (child instanceof HTMLSpanElement && child.classList.contains("ltl-badge-host")) {
       return child;
     }
@@ -448,6 +505,21 @@ function isOnlyOwnMutations(mutations: MutationRecord[]): boolean {
 }
 
 function scanCurrentPost(): AnalysisResult {
+  if (isExcludedPage()) {
+    const result: AnalysisResult = {
+      score: "--",
+      confidence: "--",
+      status: "Unavailable",
+      summary: "Automatic post badges are disabled on this LinkedIn page.",
+      reasons: [],
+      suspiciousSentences: [],
+      warning: "Profile and notifications pages are intentionally excluded.",
+      wordCount: 0,
+    };
+    lastResult = result;
+    return result;
+  }
+
   const active = findNearestPost();
   if (!active) {
     const result: AnalysisResult = {
@@ -479,6 +551,73 @@ function scanCurrentPost(): AnalysisResult {
 
   lastResult = result;
   return result;
+}
+
+function setupRouteWatcher(): void {
+  let lastHref = window.location.href;
+
+  window.setInterval(() => {
+    const nextHref = window.location.href;
+    if (nextHref === lastHref) {
+      return;
+    }
+
+    lastHref = nextHref;
+    handleRouteChange();
+  }, 500);
+}
+
+function setupPanelDismissListener(): void {
+  if (panelDismissReady) {
+    return;
+  }
+  panelDismissReady = true;
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest(".ltl-badge")) {
+      return;
+    }
+    closeOpenBadgePanel();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeOpenBadgePanel();
+    }
+  });
+}
+
+function closeOpenBadgePanel(): void {
+  if (!openBadgePanel) {
+    return;
+  }
+
+  openBadgePanel.hidden = true;
+  openBadgePanel = null;
+}
+
+function handleRouteChange(): void {
+  clearAllHighlights();
+  clearAllBadges();
+  lastResult = null;
+
+  if (settings.scanMode === "auto" && !isExcludedPage()) {
+    scheduleBootstrapScans(true);
+  }
+}
+
+function scheduleBootstrapScans(force = false): void {
+  const token = ++routeScanToken;
+
+  for (const delay of bootstrapScanDelays) {
+    window.setTimeout(() => {
+      if (token !== routeScanToken || settings.scanMode !== "auto" || isExcludedPage()) {
+        return;
+      }
+      scheduleVisiblePostScan(force);
+    }, delay);
+  }
 }
 
 function scanSelection(): AnalysisResult {

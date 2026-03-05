@@ -1,7 +1,6 @@
 .ltl-highlight {
-  background: rgba(255, 230, 120, 0.34);
-  border-bottom: 2px solid rgba(196, 154, 0, 0.9);
-  border-radius: 2px;
+  background: rgba(245, 158, 11, 0.18);
+  border-radius: 3px;
 }
 
 .ltl-inline-chunk {
@@ -11,7 +10,7 @@
 .ltl-badge-host {
   display: block;
   position: relative;
-  margin: 0 0 6px;
+  margin: 2px 0 8px;
   width: fit-content;
   max-width: 100%;
   z-index: 10;
@@ -30,39 +29,42 @@
   gap: 6px;
   border: none;
   border-radius: 999px;
-  padding: 5px 12px 5px 9px;
+  padding: 6px 12px 6px 10px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1;
   cursor: pointer;
-  background: #f1f5f9;
-  color: #475569;
-  transition: background 0.15s;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1f2937;
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.12),
+    0 1px 3px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
   user-select: none;
+  backdrop-filter: blur(8px);
+}
+
+.ltl-badge__button:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.14),
+    0 2px 5px rgba(15, 23, 42, 0.1);
 }
 
 .ltl-badge__button[data-variant="high"] {
-  background: #fef2f2;
+  background: rgba(255, 255, 255, 0.97);
 }
 
 .ltl-badge__button[data-variant="medium"] {
-  background: #fffbeb;
+  background: rgba(255, 255, 255, 0.97);
 }
 
 .ltl-badge__button[data-variant="low"] {
-  background: #f0fdf4;
-}
-
-.ltl-badge__button[data-variant="high"]:hover {
-  background: #fee2e2;
-}
-
-.ltl-badge__button[data-variant="medium"]:hover {
-  background: #fef3c7;
-}
-
-.ltl-badge__button[data-variant="low"]:hover {
-  background: #dcfce7;
+  background: rgba(255, 255, 255, 0.97);
 }
 
 .ltl-badge__dot {
@@ -73,15 +75,15 @@
 }
 
 .ltl-badge__button[data-variant="high"] .ltl-badge__dot {
-  background: #ef4444;
+  background: #e11d48;
 }
 
 .ltl-badge__button[data-variant="medium"] .ltl-badge__dot {
-  background: #f59e0b;
+  background: #d97706;
 }
 
 .ltl-badge__button[data-variant="low"] .ltl-badge__dot {
-  background: #22c55e;
+  background: #0f766e;
 }
 
 .ltl-badge__score {
@@ -91,43 +93,44 @@
 }
 
 .ltl-badge__button[data-variant="high"] .ltl-badge__score {
-  color: #b91c1c;
+  color: #9f1239;
 }
 
 .ltl-badge__button[data-variant="medium"] .ltl-badge__score {
-  color: #b45309;
+  color: #92400e;
 }
 
 .ltl-badge__button[data-variant="low"] .ltl-badge__score {
-  color: #15803d;
+  color: #0f766e;
 }
 
 .ltl-badge__label {
-  font-weight: 500;
-  font-size: 11px;
-  color: #94a3b8;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: #64748b;
 }
 
 .ltl-badge__panel {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   left: 0;
   z-index: 2147483647;
-  width: 280px;
-  max-width: min(280px, calc(100vw - 32px));
+  width: 300px;
+  max-width: min(300px, calc(100vw - 32px));
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #fff;
-  color: #1e293b;
+  color: #0f172a;
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.06);
+    0 20px 48px rgba(15, 23, 42, 0.2),
+    0 8px 16px rgba(15, 23, 42, 0.12);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
 }
 
 .ltl-badge__header {
-  padding: 16px 16px 14px;
+  padding: 14px 14px 12px;
 }
 
 .ltl-badge__score-display {
@@ -138,28 +141,28 @@
 }
 
 .ltl-badge__score-large {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .ltl-badge__score-display[data-variant="high"] .ltl-badge__score-large {
-  color: #dc2626;
+  color: #be123c;
 }
 
 .ltl-badge__score-display[data-variant="medium"] .ltl-badge__score-large {
-  color: #d97706;
+  color: #92400e;
 }
 
 .ltl-badge__score-display[data-variant="low"] .ltl-badge__score-large {
-  color: #16a34a;
+  color: #0f766e;
 }
 
 .ltl-badge__score-max {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
 .ltl-badge__status {
@@ -167,61 +170,57 @@
   align-items: center;
   justify-content: space-between;
   font-size: 11px;
-  color: #64748b;
+  color: #475569;
   margin-bottom: 12px;
 }
 
 .ltl-badge__status-tag {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 0;
 }
 
 .ltl-badge__status-tag[data-variant="high"] {
-  background: #fef2f2;
-  color: #dc2626;
+  color: #be123c;
 }
 
 .ltl-badge__status-tag[data-variant="medium"] {
-  background: #fffbeb;
-  color: #d97706;
+  color: #92400e;
 }
 
 .ltl-badge__status-tag[data-variant="low"] {
-  background: #f0fdf4;
-  color: #16a34a;
+  color: #0f766e;
 }
 
 .ltl-badge__bar {
-  height: 3px;
-  border-radius: 3px;
-  background: #f1f5f9;
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
   overflow: hidden;
 }
 
 .ltl-badge__bar-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 999px;
   transition: width 0.4s ease;
 }
 
 .ltl-badge__bar-fill[data-variant="high"] {
-  background: #ef4444;
+  background: #e11d48;
 }
 
 .ltl-badge__bar-fill[data-variant="medium"] {
-  background: #f59e0b;
+  background: #d97706;
 }
 
 .ltl-badge__bar-fill[data-variant="low"] {
-  background: #22c55e;
+  background: #0f766e;
 }
 
 .ltl-badge__body {
-  padding: 0 16px 14px;
+  padding: 0 14px 12px;
 }
 
 .ltl-badge__section-label {
@@ -229,7 +228,7 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 8px;
 }
 
@@ -239,7 +238,7 @@
   margin-bottom: 5px;
   font-size: 12px;
   line-height: 1.5;
-  color: #475569;
+  color: #334155;
 }
 
 .ltl-badge__reason::before {
@@ -250,7 +249,7 @@
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: #94a3b8;
 }
 
 .ltl-badge__reason:last-child {
@@ -258,9 +257,9 @@
 }
 
 .ltl-badge__footer {
-  padding: 10px 16px;
-  background: #f8fafc;
+  padding: 10px 14px;
+  background: #f1f5f9;
   font-size: 11px;
   line-height: 1.5;
-  color: #94a3b8;
+  color: #64748b;
 }

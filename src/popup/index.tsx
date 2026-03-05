@@ -2,6 +2,9 @@ import type { JSX } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { type AnalysisResult, DEFAULT_SETTINGS, type Settings } from "../shared/defaults";
+import type { ContentToPopupResponse, PopupToContentMessage } from "../shared/messages";
+
+type ActionMessageType = Exclude<PopupToContentMessage["type"], "SETTINGS_UPDATED">;
 
 function PopupApp(): JSX.Element {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -15,11 +18,11 @@ function PopupApp(): JSX.Element {
     const tab = await getActiveTab();
     if (tab?.id) {
       try {
-        const response = await chrome.tabs.sendMessage(tab.id, { type: "GET_LAST_RESULT" });
+        const response = await sendMessageToTab(tab.id, { type: "GET_LAST_RESULT" });
         if (response?.result) {
           setResult(response.result);
         } else {
-          const scanResponse = await chrome.tabs.sendMessage(tab.id, { type: "SCAN_POST" });
+          const scanResponse = await sendMessageToTab(tab.id, { type: "SCAN_POST" });
           setResult(scanResponse?.result ?? null);
         }
       } catch {
@@ -32,14 +35,14 @@ function PopupApp(): JSX.Element {
     void initialize();
   }, [initialize]);
 
-  async function runAction(type: string): Promise<void> {
+  async function runAction(type: ActionMessageType): Promise<void> {
     const tab = await getActiveTab();
     if (!tab?.id) {
       return;
     }
 
     try {
-      const response = await chrome.tabs.sendMessage(tab.id, { type });
+      const response = await sendMessageToTab(tab.id, { type });
       setResult(response?.result ?? null);
     } catch {
       setResult({
@@ -63,7 +66,7 @@ function PopupApp(): JSX.Element {
     const tab = await getActiveTab();
     if (tab?.id) {
       try {
-        await chrome.tabs.sendMessage(tab.id, { type: "SETTINGS_UPDATED", settings: next });
+        await sendMessageToTab(tab.id, { type: "SETTINGS_UPDATED", settings: next });
       } catch {
         // No-op: the active tab may not be LinkedIn.
       }
@@ -76,9 +79,9 @@ function PopupApp(): JSX.Element {
 
   return (
     <main className="popup-app">
-      <p className="popup-eyebrow">Local Text Lens</p>
+      <p className="popup-eyebrow">HumanScore</p>
       <h1 className="popup-title">AI-likely text scan</h1>
-      <p className="popup-subtitle">React popup, local heuristics only, and no network calls.</p>
+      <p className="popup-subtitle">Local heuristics only, and no network calls.</p>
 
       <div className="popup-grid">
         <section className="popup-card">
@@ -88,21 +91,21 @@ function PopupApp(): JSX.Element {
               onClick={() => void runAction("SCAN_POST")}
               type="button"
             >
-              Scan This Post
+              Scan Nearest Post
             </button>
             <button
               className="popup-button secondary"
               onClick={() => void runAction("SCAN_SELECTION")}
               type="button"
             >
-              Scan Selection
+              Scan Selected Text
             </button>
             <button
               className="popup-button ghost"
               onClick={() => void runAction("CLEAR_HIGHLIGHTS")}
               type="button"
             >
-              Clear Highlights
+              Remove Highlights
             </button>
           </div>
         </section>
@@ -213,6 +216,14 @@ function parseMarkers(input: string): string[] {
 async function getActiveTab(): Promise<chrome.tabs.Tab | null> {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   return tabs[0] ?? null;
+}
+
+async function sendMessageToTab(
+  tabId: number,
+  message: PopupToContentMessage
+): Promise<ContentToPopupResponse | undefined> {
+  const response = await chrome.tabs.sendMessage(tabId, message);
+  return response as ContentToPopupResponse | undefined;
 }
 
 async function loadSettingsWithMigration(): Promise<Settings> {

@@ -35,7 +35,7 @@ graph TB
         subgraph POP["Popup"]
             direction TB
             UI["React UI"]
-            ACTIONS["Scan This Post <br> Scan Selection <br> Clear Highlights"]
+            ACTIONS["Scan Nearest Post <br> Scan Selected Text <br> Remove Highlights"]
             SETTINGS["Settings <br> Threshold - Highlight - Scan Mode"]
             SCORE["Score Display <br> Reasons - Confidence"]
 
@@ -137,7 +137,7 @@ flowchart TD
 
 **Lexical Concentration** (weight 0.14) - Measures vocabulary diversity using four metrics: Type-Token Ratio (TTR), Moving Average TTR (MATTR with window 25), hapax legomena ratio (words used only once), and Yule's K statistic. AI text typically has lower vocabulary diversity and more concentrated word reuse.
 
-**Corporate Tone** (weight 0.13) - Counts matches against 145+ template phrases (e.g. "in today's fast-paced world", "the real takeaway", "here's why"), 22 transition markers ("furthermore", "consequently", "in addition"), and 82 AI-overused vocabulary words ("delve", "tapestry", "leverage", "holistic", "foster"). Normalized per word count to avoid penalizing long text.
+**Corporate Tone** (weight 0.13) - Counts matches against 177 built-in template phrases (e.g. "in today's fast-paced world", "the real takeaway", "here's why"), 22 transition markers ("furthermore", "consequently", "in addition"), and 79 AI-overused vocabulary words ("delve", "tapestry", "leverage", "holistic", "foster"). Normalized per word count to avoid penalizing long text.
 
 **Predictability** (weight 0.13) - Computes Shannon entropy at multiple levels: word-level, bigram-level, sentence-starter, and sentence-ending. Also measures local coherence via Jaccard similarity between consecutive sentence word sets. AI text has lower entropy (more predictable word choices) and higher local coherence (unnaturally smooth transitions between sentences).
 
@@ -170,7 +170,7 @@ This provides:
 - Raw 0.30 -> Score ~73 (likely AI)
 - Raw 0.40 -> Score ~88 (very likely AI)
 
-Posts under 120 words receive a provisional score capped at 59 with a warning.
+Posts under 90 words receive a provisional score capped at 59 with a warning.
 
 ### Confidence Calculation
 
@@ -186,7 +186,7 @@ Individual sentences are scored for highlighting based on: repeated starters, te
 ## Project Structure
 
 ```
-LocalTextLens/
+HumanScore/
 ├── public/
 │   ├── manifest.json          # Chrome extension manifest (MV3)
 │   ├── popup.html             # Popup shell
@@ -214,10 +214,11 @@ LocalTextLens/
 
 | File | Lines | Purpose |
 |---|---|---|
-| `detector.ts` | ~1400 | All detection logic: 145+ markers, 82 AI vocabulary words, 10 feature functions, scoring calibration, sentence scoring |
-| `content/index.tsx` | ~630 | Content script: DOM observation, badge mounting, highlighting, message bridge |
+| `detector.ts` | ~1520 | All detection logic: 177 markers, 79 AI vocabulary words, 10 feature functions, scoring calibration, sentence scoring |
+| `content/index.tsx` | ~685 | Content script: DOM observation, badge mounting, highlighting, message bridge |
 | `linkedin.ts` | ~195 | LinkedIn-specific DOM selectors and text extraction via TreeWalker |
 | `popup/index.tsx` | ~250 | React popup: scan buttons, score display, settings controls |
+| `shared/messages.ts` | ~40 | Typed popup/content message protocol and runtime type guard |
 | `defaults.ts` | ~30 | Shared types (`Settings`, `AnalysisResult`) and constants |
 | `background.ts` | ~25 | Service worker for storage migration on install |
 
@@ -230,6 +231,7 @@ LocalTextLens/
 | Bundler | esbuild |
 | Linting | Biome |
 | Platform | Chrome Extension (Manifest V3) |
+| Browser API Types | `@types/chrome` |
 | Storage | `chrome.storage.sync` |
 | External Dependencies | None for detection (zero ML, zero network) |
 
@@ -250,6 +252,7 @@ Other commands:
 ```bash
 npm run check    # Lint and format check
 npm run format   # Auto-format
+npm test         # Run detector test suite
 ```
 
 ## Tuning
@@ -260,11 +263,11 @@ Edit `FEATURE_WEIGHTS` in `src/shared/detector.ts`. Positive weights increase th
 
 ### Template Markers
 
-The `BUILT_IN_TEMPLATE_MARKERS` array in `detector.ts` contains 145+ phrases. Add domain-specific or emerging AI patterns here. Users can also add custom markers via the popup settings (stored in `chrome.storage.sync`, max 100).
+The `BUILT_IN_TEMPLATE_MARKERS` array in `detector.ts` contains 177 phrases. Add domain-specific or emerging AI patterns here. Users can also add custom markers via the popup settings (stored in `chrome.storage.sync`, max 100).
 
 ### AI Vocabulary
 
-The `AI_OVERUSED_WORDS` set contains 82 individual words that AI models systematically overuse. Add new entries as LLM output patterns evolve.
+The `AI_OVERUSED_WORDS` set contains 79 individual words that AI models systematically overuse. Add new entries as LLM output patterns evolve.
 
 ### Scoring Curve
 
@@ -284,14 +287,15 @@ The default threshold (65) is defined in `src/shared/defaults.ts`. Users can adj
 ## Behavior
 
 - **Auto mode** (default): `MutationObserver` + `IntersectionObserver` + scroll events scan visible posts and render badges as you browse.
-- **Manual mode** ("Only scan when clicked"): Disables automatic feed scanning. Use the popup's "Scan This Post" or "Scan Selection" buttons.
+- **Manual mode** ("Only scan when clicked"): Disables automatic feed scanning. Use the popup's "Scan Nearest Post" or "Scan Selected Text" buttons.
 - Clicking a badge toggles an explanation panel showing score, confidence, top reasons, and warnings.
 - Highlights mark individual sentences that score above the threshold based on per-sentence analysis.
+- Profile and notifications pages are excluded from automatic badge rendering.
 
 ## Limitations
 
 - Heuristic-only: no true perplexity or token-level probability analysis (would require a language model).
-- Short text (< 120 words) receives provisional scores capped at 59.
+- Short text (< 90 words) receives provisional scores capped at 59.
 - Skilled human writers who follow LinkedIn templates may trigger false positives.
 - AI text that has been heavily edited or uses a casual/personal voice may score lower than expected.
 - Detection patterns are tuned for English; other languages are not supported.

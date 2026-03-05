@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Local Text Lens",
-  "version": "2.0.0",
+  "name": "HumanScore",
+  "version": "1.0.0",
   "description": "Locally estimates AI-likely writing on LinkedIn and shows transparent score badges.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["https://www.linkedin.com/*"],
@@ -10,7 +10,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Local Text Lens",
+    "default_title": "HumanScore",
     "default_popup": "popup.html"
   },
   "content_scripts": [

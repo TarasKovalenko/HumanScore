@@ -1229,7 +1229,7 @@ function groupSentencesByParagraph(sentences: string[]): number[] {
 }
 
 function detectDefinitionList(lines: string[]): number {
-  const defPattern = /^.{2,40}\s+[–--]\s+.{4,}/;
+  const defPattern = /^.{2,40}\s+(?:-|–|—)\s+.{4,}/;
   const colonDefPattern = /^[A-Z][\w<>,\s]{1,35}:\s+.{4,}/;
   const matches = lines.filter((l) => defPattern.test(l) || colonDefPattern.test(l)).length;
   return matches >= 3 ? clamp(matches * 0.06, 0, 0.24) : 0;
