@@ -8,6 +8,9 @@
   "type": "module",
   "scripts": {
     "build": "node ./scripts/build.mjs",
+    "package": "node ./scripts/package.mjs all",
+    "package:zip": "node ./scripts/package.mjs zip",
+    "package:crx": "node ./scripts/package.mjs crx",
     "check": "biome check .",
     "format": "biome format --write .",
     "test": "vitest run",

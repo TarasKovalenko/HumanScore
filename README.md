@@ -253,7 +253,19 @@ Other commands:
 npm run check    # Lint and format check
 npm run format   # Auto-format
 npm test         # Run detector test suite
+npm run package:zip  # Build + create ZIP in releases/
+npm run package:crx  # Build + create CRX in releases/
+npm run package      # Build + create ZIP and CRX
 ```
+
+### Packaging Notes
+
+- ZIP output is written to `releases/<name>-v<version>.zip`.
+- CRX output is written to `releases/<name>-v<version>.crx`.
+- If no key is provided, Chrome may generate a `.pem` key in `releases/` on first CRX package.
+- Optional env vars:
+  - `CHROME_BIN`: absolute path to Chrome/Chromium executable (used for CRX packaging).
+  - `CRX_KEY_PATH`: absolute or project-relative path to an existing `.pem` key for stable CRX signatures.
 
 ## Tuning
 
