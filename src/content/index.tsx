@@ -282,7 +282,7 @@ function mountBadge(
       ? anchorParent
       : container;
 
-  if (!state || !state.host.isConnected) {
+  if (!state?.host.isConnected) {
     const host = findReusableHost(container, anchor) ?? document.createElement("span");
     host.className = "ltl-badge-host";
     host.dataset.ltlBadgeHost = "true";
